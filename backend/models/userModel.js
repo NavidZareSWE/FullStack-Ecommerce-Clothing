@@ -1,10 +1,8 @@
 import mongoose from "mongoose";
 
-// Creating User Schema
 const userSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
-    // Every Email should be unique, 2 different users can't have the same email
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     cartData: { type: Object, default: {} },

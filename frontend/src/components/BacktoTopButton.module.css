@@ -1,43 +1,47 @@
 .ScrollToTop {
-  display: inline-block;
-  background-color: #ff9800;
-  width: 50px;
-  height: 50px;
-  text-align: center;
-  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #111827;
+  width: 48px;
+  height: 48px;
+  border-radius: 9999px;
   position: fixed;
-  bottom: 30px;
-  right: 30px;
+  /* Stay clear of the iOS home indicator / notches */
+  bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  right: calc(16px + env(safe-area-inset-right, 0px));
+  box-shadow: 0 4px 14px rgb(0 0 0 / 0.25);
   transition:
     background-color 0.3s,
-    opacity 0.5s,
-    visibility 0.5s;
+    opacity 0.3s,
+    visibility 0.3s,
+    transform 0.3s;
   opacity: 0;
   visibility: hidden;
-  z-index: 1000;
+  transform: translateY(8px);
+  z-index: 30;
 }
 
 .ScrollToTop:hover {
   cursor: pointer;
-  background-color: #333;
+  background-color: #374151;
 }
 .ScrollToTop:active {
-  background-color: #555;
+  background-color: #4b5563;
+}
+.ScrollToTop:focus-visible {
+  outline: 3px solid #111827;
+  outline-offset: 3px;
 }
 .show {
   opacity: 1;
   visibility: visible;
-}
-@media screen {
-  .ScrollToTop,
-  .show {
-    display: none;
-  }
+  transform: translateY(0);
 }
 
-@media (max-width: 640px) {
+@media (min-width: 640px) {
   .ScrollToTop {
-    width: 35px;
-    height: 35px;
+    bottom: calc(30px + env(safe-area-inset-bottom, 0px));
+    right: calc(30px + env(safe-area-inset-right, 0px));
   }
 }

@@ -1,47 +1,139 @@
-@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&family=Prata&display=swap");
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-* {
-  font-family: Outfit, "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-body,
-html {
-  overflow-x: hidden;
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    scroll-padding-top: 7rem; /* keep anchored content clear of the sticky header */
+  }
+
+  body {
+    @apply bg-white font-sans text-gray-800 antialiased;
+    /* Safety net against sideways scrolling on phones. `hidden` is the
+       fallback for older browsers; `clip` (when supported) does not create a
+       scroll container. Both keep the sticky header working because the value
+       is propagated to the viewport. */
+    overflow-x: hidden;
+    overflow-x: clip;
+  }
+
+  /* One consistent, highly visible keyboard focus indicator (WCAG 2.4.7 / 2.4.11) */
+  :focus-visible {
+    outline: 2px solid #111827;
+    outline-offset: 2px;
+  }
+
+  /* Larger, easier to hit native controls on touch screens */
+  input,
+  select,
+  textarea,
+  button {
+    font: inherit;
+  }
+
+  /* Chrome, Safari, Edge, Opera */
+  input::-webkit-outer-spin-button,
+  input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  /* Firefox */
+  input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
 }
 
-a.active hr {
-  display: block;
+@layer components {
+  /* Shared horizontal page gutter (same values the layout used before) */
+  .page-container {
+    @apply mx-auto w-full max-w-[1600px] px-4 sm:px-[5vw] md:px-[7vw] lg:px-[9vw];
+  }
+
+  .btn-primary {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 bg-black px-8 py-3 text-sm font-medium tracking-wide text-white transition duration-200 hover:bg-gray-800 active:scale-[0.98] active:bg-gray-700 disabled:cursor-not-allowed disabled:bg-gray-500;
+  }
+
+  .btn-secondary {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 border border-black bg-white px-8 py-3 text-sm font-medium tracking-wide text-black transition duration-200 hover:bg-black hover:text-white active:scale-[0.98];
+  }
+
+  .icon-btn {
+    /* Pixel (not rem) sizes: tap targets must not grow with the phone's text
+       size setting, or the header no longer fits on one line */
+    @apply relative inline-flex h-[40px] w-[40px] shrink-0 items-center justify-center rounded-full text-gray-800 transition duration-200 hover:bg-gray-100 active:scale-95 xs:h-[44px] xs:w-[44px];
+  }
+
+  .form-label {
+    @apply mb-1.5 block text-sm font-medium text-gray-800;
+  }
+
+  .form-input {
+    @apply block min-h-11 w-full rounded border border-gray-500 bg-slate-50 px-3.5 py-2 text-base text-gray-900 transition-colors placeholder:text-gray-500 focus:border-black focus:outline-none focus:ring-2 focus:ring-black/20 aria-[invalid=true]:border-red-700;
+  }
+
+  .form-error {
+    @apply mt-1 text-sm text-red-700;
+  }
+}
+
+/* Scroll-reveal: content fades/slides in once as it enters the viewport.
+   Content is only hidden when JavaScript has marked the page as ready, so it
+   is always visible without JS, in print, or for reduced-motion users. */
+@media (prefers-reduced-motion: no-preference) {
+  .js-reveal [data-reveal] {
+    opacity: 0;
+    transform: translateY(16px);
+    transition:
+      opacity 600ms cubic-bezier(0.22, 1, 0.36, 1),
+      transform 600ms cubic-bezier(0.22, 1, 0.36, 1);
+    transition-delay: var(--reveal-delay, 0ms);
+  }
+  .js-reveal [data-reveal].is-revealed {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media print {
+  [data-reveal] {
+    opacity: 1 !important;
+    transform: none !important;
+  }
 }
 
 .prata-regular {
-  font-family: "Prata", serif;
+  font-family: "Prata", Georgia, serif;
   font-weight: 400;
   font-style: normal;
 }
-::-webkit-scrollbar {
-  display: none;
+
+/* Respect the user's reduced motion preference (WCAG 2.3.3) */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
-/* Chrome, Safari, Edge, Opera */
-input::-webkit-outer-spin-button,
-input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
+/* react-toastify: site font, darker text, and bottom placement on phones so
+   messages never cover the form field that needs attention */
+:root:root {
+  --toastify-font-family: inherit;
+  --toastify-text-color-light: #1f2937;
 }
 
-/* Firefox */
-input[type="number"] {
-  -moz-appearance: textfield;
-}
-@media (max-width: 640px) {
-  a.active {
-    background-color: black;
-    color: white;
+@media only screen and (max-width: 480px) {
+  .Toastify__toast-container.Toastify__toast-container--top-right {
+    top: auto;
+    bottom: env(safe-area-inset-bottom, 0px);
   }
 }

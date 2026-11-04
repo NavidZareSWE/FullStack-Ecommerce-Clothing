@@ -1,32 +1,33 @@
 import { NavLink } from "react-router-dom";
 import { assets } from "../assets/assets";
+
+const links = [
+  { to: "/add", label: "Add items", icon: assets.add_icon },
+  { to: "/list", label: "List items", icon: assets.order_icon },
+  { to: "/orders", label: "Orders", icon: assets.order_icon },
+];
+
 const Sidebar = () => {
   return (
-    <div className="w-[18%] min-h-screen border-r-2">
-      <div className="flex flex-col gap-4 pt-6 pl-[20%] text-[15px]">
-        <NavLink
-          className={`flex items-center gap-3 border border-gray-300 border-r-0 px-3 py-2 rounded-l`}
-          to="/add"
-        >
-          <img className="w-5 h-5" src={assets.add_icon} alt="Add" />
-          <p className="hidden md:block">Add items</p>
-        </NavLink>
-        <NavLink
-          className={`flex items-center gap-3 border border-gray-300 border-r-0 px-3 py-2 rounded-l`}
-          to="/list"
-        >
-          <img className="w-5 h-5" src={assets.order_icon} alt="list" />
-          <p className="hidden md:block">List items</p>
-        </NavLink>
-        <NavLink
-          className={`flex items-center gap-3 border border-gray-300 border-r-0 px-3 py-2 rounded-l`}
-          to="/orders"
-        >
-          <img className="w-5 h-5" src={assets.order_icon} alt="Orders" />
-          <p className="hidden md:block">Orders</p>
-        </NavLink>
-      </div>
-    </div>
+    <nav
+      aria-label="Admin"
+      className="border-b border-gray-200 bg-white md:min-h-[calc(100vh-4.5rem)] md:w-56 md:shrink-0 md:border-b-0 md:border-r-2 md:bg-transparent lg:w-64"
+    >
+      {/* Phones: three equal tabs that always fit; md+: vertical sidebar */}
+      <ul className="grid grid-cols-3 gap-2 px-4 py-3 text-xs xs:text-sm md:flex md:flex-col md:gap-4 md:py-6 md:pl-[20%] md:pr-0 md:text-[15px]">
+        {links.map(({ to, label, icon }) => (
+          <li key={to} className="min-w-0">
+            <NavLink
+              className="flex min-h-11 flex-col items-center justify-center gap-1 rounded border border-gray-300 px-2 py-2 text-center transition-colors duration-200 hover:bg-pink-50 xs:flex-row xs:gap-2 md:justify-start md:gap-3 md:rounded-r-none md:border-r-0 md:px-3 md:text-left"
+              to={to}
+            >
+              <img className="h-5 w-5" src={icon} alt="" />
+              <span>{label}</span>
+            </NavLink>
+          </li>
+        ))}
+      </ul>
+    </nav>
   );
 };
 

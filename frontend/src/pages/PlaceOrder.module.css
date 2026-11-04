@@ -1,5 +1,6 @@
+/* Required-fields note: dark red for sufficient contrast (WCAG 1.4.3) */
 .req {
   --red: rgb(153 27 27);
   color: var(--red);
-  opacity: 0.5;
+  font-size: 0.875rem;
 }

@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import axios from "axios";
-import { backendURL, currency } from "../App";
+import { backendURL, currency } from "../config";
 import { assets } from "../assets/assets";
 const Orders = ({ token }) => {
   const [orders, setOrders] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const fetchAllOrders = async () => {
     if (!token) return null;
     try {
@@ -21,6 +22,8 @@ const Orders = ({ token }) => {
     } catch (error) {
       console.error(error);
       toast.error(error.message);
+    } finally {
+      setIsLoading(false);
     }
   };
   const statusHandler = async (e, orderId) => {
@@ -55,53 +58,51 @@ const Orders = ({ token }) => {
   };
   useEffect(() => {
     fetchAllOrders();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
   return (
-    <div>
-      <h3>Order Page</h3>
-      <div>
+    <section aria-labelledby="orders-heading">
+      <h1
+        id="orders-heading"
+        className="mb-3 text-xl font-semibold text-gray-900"
+      >
+        Order Page
+      </h1>
+      <p className="mb-3 text-sm text-gray-600" role="status">
+        {isLoading
+          ? "Loading orders…"
+          : `${orders.length} ${orders.length === 1 ? "order" : "orders"}`}
+      </p>
+      <ul role="list" aria-labelledby="orders-heading">
         {orders.map((order, index) => {
-          console.log(order);
+          const selectId = `order-status-${order._id || index}`;
+          const customer =
+            order.address.firstName && order.address.lastName
+              ? `${order.address.firstName} ${order.address.lastName}`
+              : order.address;
           return (
-            <div
-              className="grid grid-cols-1 sm:grid-cols-[0.5fr_2fr_1fr] lg:grid-cols-[0.5fr_2fr_1fr_1fr_1fr] gap-3 items-start border-2 border-gray-200 p-5 md:p-8 my-3 md:my-4 text-xs sm:text-sm text-gray-700"
-              key={index}
+            <li
+              className="my-3 grid animate-fade-in-up grid-cols-1 items-start gap-3 rounded border-2 border-gray-200 bg-white p-4 text-sm text-gray-700 sm:grid-cols-[0.5fr_2fr_1fr] sm:p-5 md:my-4 md:p-8 lg:grid-cols-[0.5fr_2fr_1fr_1fr_1fr]"
+              key={order._id || index}
             >
-              <img
-                className="w-12"
-                src={assets.parcel_icon}
-                alt="Parcel icon"
-              />
+              <img className="w-12" src={assets.parcel_icon} alt="" />
               <div>
-                <div>
-                  {order.items.map((item, index) => {
-                    if (index === order.items.length - 1) {
-                      return (
-                        <p className="py-0.5" key={index}>
-                          {item.name} x {item.quanitity}{" "}
-                          <span> {item.size} </span>
-                        </p>
-                      );
-                    } else {
-                      return (
-                        <p className="py-0.5" key={index}>
-                          {item.name} x {item.quanitity}{" "}
-                          <span> {item.size} </span> ,{" "}
-                        </p>
-                      );
-                    }
-                  })}
-                </div>
-                <p className="mt-3 mb-2 font-medium">
-                  {order.address.firstName && order.address.lastName
-                    ? `${order.address.firstName} ${order.address.lastName}`
-                    : order.address}
+                <ul className="list-none">
+                  {order.items.map((item, index) => (
+                    <li className="py-0.5" key={index}>
+                      {item.name} x {item.quanitity} <span> {item.size} </span>
+                      {index !== order.items.length - 1 && ","}
+                    </li>
+                  ))}
+                </ul>
+                <p className="mb-2 mt-3 font-medium text-gray-900">
+                  {typeof customer === "string" ? customer : ""}
                 </p>
-                <div>
+                <address className="not-italic">
                   <p>{`${order.address.street},`}</p>
                   <p>{`${order.address.city}, ${order.address.state}, ${order.address.country}, ${order.address.zipcode}`}</p>
-                </div>
-                <p>{order.address.phone}</p>
+                  <p>{order.address.phone}</p>
+                </address>
               </div>
               <div>
                 <p className="text-sm sm:text-[15px]">
@@ -111,33 +112,36 @@ const Orders = ({ token }) => {
                 <p>Payment: {order.payment ? "Done" : "Pending"}</p>
                 <p>Date: {new Date(order.date).toLocaleDateString()}</p>
               </div>
-              <p className="text-sm sm:text-[15px]">
+              <p className="text-base font-medium text-gray-900 sm:text-[15px]">
+                <span className="sr-only">Amount: </span>
                 {currency}
                 {order.amount}{" "}
               </p>
-              <select
-                onChange={(event) => statusHandler(event, order._id)}
-                value={
-                  order.statusState === "error"
-                    ? "Cancel"
-                    : order.statusState === "info"
-                      ? order.status
-                      : order.status
-                }
-                className="p-2 font-semibold"
-              >
-                <option value="OrderPlaced">Order Placed</option>
-                <option value="Packing">Packing</option>
-                <option value="Shipped">Shipped</option>
-                <option value="Out for delivery">Out for delivery</option>
-                <option value="Delivered">Delivered</option>
-                <option value="Cancel">Cancel</option>
-              </select>
-            </div>
+              <div>
+                <label htmlFor={selectId} className="sr-only">
+                  Order status
+                </label>
+                <select
+                  id={selectId}
+                  onChange={(event) => statusHandler(event, order._id)}
+                  value={
+                    order.statusState === "error" ? "Cancel" : order.status
+                  }
+                  className="w-full p-2 font-semibold"
+                >
+                  <option value="OrderPlaced">Order Placed</option>
+                  <option value="Packing">Packing</option>
+                  <option value="Shipped">Shipped</option>
+                  <option value="Out for delivery">Out for delivery</option>
+                  <option value="Delivered">Delivered</option>
+                  <option value="Cancel">Cancel</option>
+                </select>
+              </div>
+            </li>
           );
         })}
-      </div>
-    </div>
+      </ul>
+    </section>
   );
 };
 

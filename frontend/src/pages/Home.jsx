@@ -7,6 +7,7 @@ import OurPolicy from "../components/OurPolicy";
 const Home = () => {
   return (
     <div>
+      <h1 className="sr-only">Forever – clothing for men, women and kids</h1>
       <Hero />
       <LatestCollection />
       <BestSeller />

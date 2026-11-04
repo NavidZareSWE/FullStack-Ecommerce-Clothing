@@ -4,7 +4,6 @@ import userModel from "../models/userModel.js";
 const placeOrder = async (req, res) => {
   try {
     const { userID, items, amount, address } = req.body;
-    console.log("userID:                                " + userID);
     const orderData = {
       userID,
       address,
@@ -24,7 +23,6 @@ const placeOrder = async (req, res) => {
     res.json({ success: false, message: error.message });
   }
 };
-// Placing orders using Sepah method
 const placeOrderSepah = async (req, res) => {
   try {
   } catch (error) {
@@ -32,7 +30,6 @@ const placeOrderSepah = async (req, res) => {
     res.json({ success: false, message: error.message });
   }
 };
-// Placing orders using Tejarat method
 const placeOrderTejarat = async (req, res) => {
   try {
   } catch (error) {

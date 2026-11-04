@@ -1,0 +1,11 @@
+# Project-level pnpm settings (this folder is a single package, not a monorepo).
+
+# ESLint 10 still depends on minimatch 10.x, which is affected by
+# GHSA-g3hv-75wg-m249 (fixed in 11.0.1). minimatch 11 is API-compatible for
+# ESLint's usage; lint output was verified to be identical.
+overrides:
+  minimatch: ^11.0.1
+
+# Only install package versions that have been public for at least 1 day
+# (supply-chain protection; matches the default policy of newer pnpm releases).
+minimumReleaseAge: 1440

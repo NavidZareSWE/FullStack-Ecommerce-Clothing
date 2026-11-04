@@ -1,6 +1,63 @@
-.swiper-slide img {
-  height: 24rem; /* 384px */
-  object-fit: cover;
-  object-position: center;
-  border-radius: 2px;
-} 
+/* Hero carousel pagination: higher-contrast dots inside 24×24px hit areas
+   (WCAG 2.5.8 Target Size) */
+.hero-swiper {
+  --swiper-pagination-bullet-size: 24px;
+  --swiper-pagination-bullet-horizontal-gap: 2px;
+  --swiper-pagination-bullet-inactive-opacity: 1;
+  padding-bottom: 2.75rem;
+}
+
+.hero-swiper .swiper-pagination {
+  bottom: 0.6rem;
+}
+
+.hero-swiper .swiper-pagination-bullet {
+  position: relative;
+  background: transparent;
+  opacity: 1;
+}
+
+.hero-swiper .swiper-pagination-bullet::before {
+  content: "";
+  position: absolute;
+  inset: 7px;
+  border-radius: 9999px;
+  background: #6b7280;
+  transition: transform 0.2s;
+}
+
+.hero-swiper .swiper-pagination-bullet-active::before {
+  background: #111827;
+  transform: scale(1.25);
+}
+
+/* Subtle motion on the active slide (disabled for reduced-motion users) */
+@media (prefers-reduced-motion: no-preference) {
+  .hero-swiper .hero-media img {
+    transform: scale(1);
+    transition: transform 6s ease-out;
+  }
+  .hero-swiper .swiper-slide-active .hero-media img {
+    transform: scale(1.05);
+  }
+  .hero-swiper .swiper-slide-active .hero-text > * {
+    animation: hero-text-in 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .hero-swiper .swiper-slide-active .hero-text > *:nth-child(2) {
+    animation-delay: 120ms;
+  }
+  .hero-swiper .swiper-slide-active .hero-text > *:nth-child(3) {
+    animation-delay: 240ms;
+  }
+}
+
+@keyframes hero-text-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

@@ -9,10 +9,17 @@ const adminAuth = async (req, res, callback) => {
         message: "Not authorized, Login Again",
       });
     }
-    // Decode the token using the secret key stored in the environment variable and verify its authenticity
-    //Synchronously verify given token using a secret or a public key to get a decoded token token - JWT string to verify secretOrPublicKey - Either the secret for HMAC algorithms, or the PEM encoded public key for RSA and ECDSA. [options] - Options for the verification returns - The decoded token.
-    const token_decode = jwt.verify(token, process.env.JWT_SECRET);
-    if (token_decode !== process.env.ADMIN_EMAIL + process.env.ADMIN_PASSWORD) {
+    const token_decode = jwt.verify(token, process.env.JWT_SECRET, {
+      algorithms: ["HS256"],
+    });
+    // The admin token carries only a role and the admin email (never the
+    // password), see adminLogin in controllers/userController.js
+    if (
+      !token_decode ||
+      typeof token_decode !== "object" ||
+      token_decode.role !== "admin" ||
+      token_decode.email !== process.env.ADMIN_EMAIL
+    ) {
       return res.json({
         success: false,
         message: "Not authorized, Login Again",

@@ -1,17 +1,18 @@
+/* Full-width gradient background with the original rounded top-right corner.
+   Implemented on the footer itself (no negative offsets), so it can never
+   cause horizontal scrolling on small screens. */
 .wrapper {
   position: relative;
-}
-.footer:before {
   background: linear-gradient(to right, rgb(255, 255, 255), rgb(214, 214, 214));
-  border-top-right-radius: 125px;
-  content: "";
-  z-index: -1;
-  position: absolute;
-  top: -20px;
-  left: -138.1px;
-  right: -138.1px;
-  bottom: -20px;
+  border-top-right-radius: 64px;
 }
+
+@media (min-width: 640px) {
+  .wrapper {
+    border-top-right-radius: 125px;
+  }
+}
+
 .hr {
   width: 90%;
   border: 0;

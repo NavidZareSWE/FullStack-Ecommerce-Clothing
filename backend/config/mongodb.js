@@ -1,11 +1,14 @@
 import mongoose from "mongoose";
 
+// Treat any `$`-prefixed keys coming from request data as literal values
+// instead of query operators. This prevents NoSQL operator injection such as
+// { "email": { "$ne": null } } in query filters.
+mongoose.set("sanitizeFilter", true);
+
 const connectDB = async () => {
-  // Set up an event listener for when the connection is successfully established
   mongoose.connection.on("connected", () => {
     console.log("MongoDB Connected");
   });
-  // Connect to the MongoDB database using the connection string from environment variables, specifically connecting to the "e-commerce" database
   await mongoose.connect(`${process.env.MONGODB_URI}/e-commerce`);
 };
 export default connectDB;

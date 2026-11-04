@@ -1,27 +1,74 @@
-@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&family=Prata&display=swap");
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-* {
-  font-family: "Outfit", serif;
-  font-optical-sizing: auto;
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+  body {
+    font-family: "Outfit", "Segoe UI", Tahoma, sans-serif;
+    font-optical-sizing: auto;
+    @apply bg-gray-50 text-gray-800 antialiased;
+  }
+  input,
+  select,
+  textarea,
+  button {
+    font: inherit;
+  }
+  /* Consistent, highly visible keyboard focus indicator (WCAG 2.4.7) */
+  :focus-visible {
+    outline: 2px solid #9d174d;
+    outline-offset: 2px;
+  }
 }
+
 select,
-input,
+input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
 textarea {
-  border: 1px solid #c2c2c2;
-  outline-color: #c586a5;
+  border: 1px solid #8a8a8a;
+  outline-color: #9d174d;
   border-radius: 4px;
   background-color: rgb(253 242 248 / var(--tw-bg-opacity, 1));
+  min-height: 44px;
+}
+select:focus,
+input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):focus,
+textarea:focus {
+  border-color: #9d174d;
+  outline: 2px solid #9d174d;
+  outline-offset: 0;
 }
 textarea {
   min-height: 10ch;
+}
+input[type="checkbox"] {
+  width: 1.125rem;
+  height: 1.125rem;
+  accent-color: #9d174d;
 }
 
 .active {
   background-color: #ffebf5;
   border-color: #c586a5;
+  color: #831843;
+  font-weight: 500;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* react-toastify: site font and darker body text */
+:root:root {
+  --toastify-font-family: inherit;
+  --toastify-text-color-light: #1f2937;
 }

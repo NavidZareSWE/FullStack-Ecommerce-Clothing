@@ -1,6 +1,5 @@
 import mongoose from "mongoose";
 
-// Creating order Schema
 const orderSchema = new mongoose.Schema({
   userID: { type: String, required: true },
   items: { type: Array, required: true },

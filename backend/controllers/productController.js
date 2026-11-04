@@ -1,6 +1,5 @@
 import { v2 as cloudinary } from "cloudinary";
 import productModel from "../models/productModel.js";
-// Function for add product
 const addProduct = async (req, res) => {
   /* Creating a middleware using multer, so if we send any file as form data,
    then that file will be parsed by multer. Multer handles file uploads and
@@ -23,7 +22,6 @@ const addProduct = async (req, res) => {
       sizes,
       bestseller,
     } = req.body;
-    // If the image is available in req.files then get the image
     const image1 = req.files.image1 && req.files.image1[0];
     const image2 = req.files.image2 && req.files.image2[0];
     const image3 = req.files.image3 && req.files.image3[0];
@@ -32,7 +30,6 @@ const addProduct = async (req, res) => {
     const images = [image1, image2, image3, image4].filter(
       (item) => item !== undefined,
     );
-    // console.log(`Images🖼️ : ${images}`);
     let imagesURL = await Promise.all(
       images.map(async (item) => {
         try {
@@ -47,7 +44,6 @@ const addProduct = async (req, res) => {
       }),
     );
 
-    // console.log(imagesURL);
     const productData = {
       name,
       description,
@@ -59,9 +55,13 @@ const addProduct = async (req, res) => {
       image: imagesURL,
       date: Date.now(),
     };
-    // console.log(productData);
     const product = new productModel(productData);
-    const validationError = product.validateSync();
+    // validate() resolves when valid and rejects with the validation error
+    // otherwise (validateSync() is deprecated in Mongoose 9).
+    const validationError = await product.validate().then(
+      () => null,
+      (error) => error,
+    );
     if (validationError) {
       console.error("Validation failed:", validationError);
     } else {
@@ -74,11 +74,8 @@ const addProduct = async (req, res) => {
     res.json({ success: false, message: error.message });
   }
 };
-// Function to list product
 const listProducts = async (req, res) => {
   try {
-    // Fetching all documents from the productModel collection and storing them
-    //  in the products variable
     const products = await productModel.find({});
     res.json({ success: true, products });
   } catch (error) {
@@ -86,11 +83,8 @@ const listProducts = async (req, res) => {
     res.json({ success: false, message: error.message });
   }
 };
-// Function for removing product
 const removeProduct = async (req, res) => {
   try {
-    // Await the deletion of a product document from the database by its
-    // unique identifier (ID) provided in the request body
     await productModel.findByIdAndDelete(req.body.id);
     res.json({ success: true, message: `Product has been removed` });
   } catch (error) {
@@ -98,7 +92,6 @@ const removeProduct = async (req, res) => {
     res.json({ success: false, message: error.message });
   }
 };
-// Function for single product info
 const getSingleProduct = async (req, res) => {
   try {
     const { productId } = req.body;

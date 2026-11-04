@@ -6,23 +6,27 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 40px 0;
+  min-height: 100vh;
+  padding: 40px 0;
   background: #fff;
   font-family: "Arvo", serif;
 }
 .container {
   display: flex;
   flex-direction: column;
-  gap: 3em;
+  gap: 2em;
   align-items: center;
   justify-content: center;
+  width: 100%;
 }
 
 .four_zero_four_bg {
   background-image: url(../../public/404.gif);
   height: 250px;
-  width: 200%;
+  width: 100%;
+  max-width: 800px;
   background-position: center;
+  background-size: contain;
   background-repeat: no-repeat;
   background-clip: border-box;
 }
@@ -31,17 +35,25 @@ h1._404_Message {
   font-size: 3em;
 }
 
-.four_zero_four_bg h3 {
-  font-size: 2em;
-}
-
+/* Darker green keeps white text above the 4.5:1 contrast minimum */
 .link_404 {
   color: #fff !important;
-  padding: 10px 20px;
-  background: #39ac31;
+  padding: 12px 24px;
+  background: #237a1d;
   margin: 20px 0;
   display: inline-block;
+  min-height: 44px;
+}
+.link_404:hover {
+  background: #1a5c16;
 }
 .contant_box_404 {
   margin-top: 5px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* The animated GIF cannot be paused; hide it for users who prefer less motion */
+  .four_zero_four_bg {
+    display: none;
+  }
 }

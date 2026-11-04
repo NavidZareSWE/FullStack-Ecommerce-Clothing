@@ -1,11 +1,13 @@
 .checkbox {
   --background: #fff;
-  --border: #d1d6ee;
-  --border-hover: #bbc1e1;
+  --border: #6b7280;
+  --border-hover: #374151;
   --border-active: #4f39f6;
   --tick: #fff;
   position: relative;
-  --checkbox-width: 15px;
+  display: inline-block;
+  flex-shrink: 0;
+  --checkbox-width: 18px;
   --checkbox-height: var(--checkbox-width);
 }
 .checkbox input,
@@ -17,6 +19,7 @@
 .checkbox input {
   -webkit-appearance: none;
   -moz-appearance: none;
+  appearance: none;
   position: relative;
   outline: none;
   background: var(--background);
@@ -26,7 +29,12 @@
   cursor: pointer;
   border-radius: 4px;
   transition: box-shadow 0.3s;
-  box-shadow: inset 0 0 0 var(--s, 1px) var(--b, var(--border));
+  box-shadow: inset 0 0 0 var(--s, 1.5px) var(--b, var(--border));
+}
+/* Visible keyboard focus for the custom checkbox */
+.checkbox input:focus-visible {
+  outline: 2px solid #111827;
+  outline-offset: 2px;
 }
 .checkbox input:hover {
   --s: 2px;

@@ -1,11 +1,76 @@
 import Title from "../components/Title";
 import CartTotal from "../components/CartTotal";
 import { assets } from "../assets/assets";
-import { useContext, useState } from "react";
+import { useContext, useRef, useState } from "react";
 import { ShopContext } from "../context/ShopContext";
 import { toast } from "react-toastify";
 import style from "./PlaceOrder.module.css";
 import axios from "axios";
+
+// Iranian mobile number: 09xxxxxxxxx or +989xxxxxxxxx / 989xxxxxxxxx
+const PHONE_PATTERN = "((09)|(\\+?989))[0-9]{9}";
+
+const Field = ({
+  label,
+  name,
+  value,
+  onChange,
+  showErrors,
+  hint,
+  errorMessage,
+  className = "",
+  ...inputProps
+}) => {
+  const id = `checkout-${name}`;
+  const hintId = hint ? `${id}-hint` : undefined;
+  const errorId = `${id}-error`;
+  const isEmpty = !value || String(value).trim() === "";
+  const patternMismatch =
+    !isEmpty &&
+    inputProps.pattern &&
+    !new RegExp(`^(?:${inputProps.pattern})$`).test(value);
+  const invalid = showErrors && (isEmpty || patternMismatch);
+  return (
+    <div className={`min-w-0 ${className}`}>
+      <label htmlFor={id} className="form-label">
+        {label}{" "}
+        <span aria-hidden="true" className="text-red-700">
+          *
+        </span>
+      </label>
+      <input
+        id={id}
+        name={name}
+        value={value}
+        onChange={onChange}
+        required
+        aria-invalid={invalid || undefined}
+        aria-describedby={
+          [hintId, invalid ? errorId : null].filter(Boolean).join(" ") ||
+          undefined
+        }
+        className="form-input"
+        {...inputProps}
+      />
+      {hint && (
+        <p id={hintId} className="mt-1 text-xs text-gray-600">
+          {hint}
+        </p>
+      )}
+      {invalid && (
+        <p id={errorId} className="form-error animate-fade-in">
+          {isEmpty ? `${label} is required.` : errorMessage}
+        </p>
+      )}
+    </div>
+  );
+};
+
+const paymentOptions = [
+  { value: "sepah", label: "Bank Sepah", logo: assets.Sepah_logo },
+  { value: "tejarat", label: "Bank Tejarat", logo: assets.Tejarat_Logo },
+  { value: "cod", label: "Cash on delivery" },
+];
 
 const PlaceOrder = () => {
   const {
@@ -19,6 +84,9 @@ const PlaceOrder = () => {
     products,
   } = useContext(ShopContext);
   const [paymentMethod, setPaymentMethod] = useState("cod");
+  const [showErrors, setShowErrors] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const formRef = useRef(null);
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -27,6 +95,7 @@ const PlaceOrder = () => {
     state: "",
     city: "",
     street: "",
+    address: "",
     zipcode: "",
     phone: "",
   });
@@ -34,11 +103,11 @@ const PlaceOrder = () => {
   const onChangeHandler = (e) => {
     const name = e.target.name;
     const value = e.target.value;
-    // Updating form data by maintaining the previous state and setting a new value for a specific field
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
   const onSubmitHandler = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return;
     try {
       let orderItems = [];
       for (const items in cartItems)
@@ -53,23 +122,22 @@ const PlaceOrder = () => {
           }
       let orderData = {
         address: {
-                  firstName: formData.firstName,
-                  lastName: formData.lastName,
-                  address:formData.address,
-                  country: formData.country,
-                  city: formData.city,
-                  state: formData.state,
-                  street: formData.street,
-                  zipcode: formData.zipcode,
-
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          address: formData.address,
+          country: formData.country,
+          city: formData.city,
+          state: formData.state,
+          street: formData.street,
+          zipcode: formData.zipcode,
         },
         items: orderItems,
         amount: getCartAmount() + delivery_fee,
       };
       switch (paymentMethod) {
-        // API calls for COD
         case "cod":
           {
+            setIsSubmitting(true);
             const response = await axios.post(
               BACKEND_URL + "/api/order/place",
               orderData,
@@ -86,205 +154,199 @@ const PlaceOrder = () => {
           break;
 
         default:
+          // Online bank payments are not implemented yet
+          toast.info(
+            "This payment method isn't available yet. Please choose Cash on delivery.",
+          );
           break;
       }
     } catch (error) {
       console.error(error);
       toast.error(error.message);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
+  // Runs before native validation: list every missing required field
+  const reportMissingFields = () => {
+    setShowErrors(true);
+    const inputs = formRef.current?.querySelectorAll("input:required") ?? [];
+    const inputsNotFilled = [];
+    inputs.forEach((input) => {
+      if (input.value.trim() === "") {
+        const label = formRef.current.querySelector(`label[for="${input.id}"]`);
+        inputsNotFilled.push(
+          label ? label.textContent.replace("*", "").trim() : input.name,
+        );
+      }
+    });
+    if (inputsNotFilled.length > 0) {
+      toast.error(
+        <div>
+          <p>Fill out the required fields:</p>
+          <ul className="mt-1 list-disc pl-5">
+            {inputsNotFilled.map((name) => (
+              <li key={name}>{name}</li>
+            ))}
+          </ul>
+        </div>,
+      );
+    }
+  };
+
+  const fieldProps = (name) => ({
+    name,
+    value: formData[name],
+    onChange: onChangeHandler,
+    showErrors,
+  });
+
   return (
     <form
+      ref={formRef}
       onSubmit={onSubmitHandler}
-      className="flex min-h-[80vh] flex-col justify-between gap-4 border-t pt-5 sm:flex-row sm:pt-14"
+      onInvalidCapture={() => setShowErrors(true)}
+      className="flex min-h-[80vh] flex-col justify-between gap-10 pt-6 md:flex-row md:gap-8 md:pt-14"
     >
       {/*----------------------- Left Side -----------------------*/}
-      <div className="flex w-full flex-col gap-4 sm:max-w-[480px]">
-        <div className="my-3 text-xl sm:text-2xl">
-          <Title text1={"DELIVERY"} text2={"INFORMATION"} />
-        </div>
-        <div className="flex gap-3">
-          <input
-            className="w-full rounded border border-gray-300 bg-slate-100 px-3.5 py-1.5"
-            type="text"
-            placeholder="First name*"
-            onChange={onChangeHandler}
-            name="firstName"
-            value={formData.firstName}
-            required
+      <fieldset className="flex w-full min-w-0 flex-col gap-3 md:max-w-[480px]">
+        <legend className="mb-3 text-xl sm:text-2xl">
+          <Title as="h1" text1={"DELIVERY"} text2={"INFORMATION"} />
+        </legend>
+        <p className={style.req}>
+          Fields marked with <span aria-hidden="true">*</span>
+          <span className="sr-only">an asterisk</span> are required.
+        </p>
+        <div className="grid grid-cols-2 gap-3">
+          <Field
+            label="First name"
+            autoComplete="given-name"
+            {...fieldProps("firstName")}
           />
-          <input
-            className="w-full rounded border border-gray-300 bg-slate-100 px-3.5 py-1.5"
-            type="text"
-            placeholder="Last name*"
-            onChange={onChangeHandler}
-            name="lastName"
-            value={formData.lastName}
-            required
+          <Field
+            label="Last name"
+            autoComplete="family-name"
+            {...fieldProps("lastName")}
           />
         </div>
-        <input
-          className="w-full rounded border border-gray-300 bg-slate-100 px-3.5 py-1.5"
+        <Field
+          label="Email address"
           type="email"
-          placeholder="Email address*"
-          onChange={onChangeHandler}
-          name="email"
-          value={formData.email}
-          required
+          inputMode="email"
+          autoComplete="email"
+          {...fieldProps("email")}
         />
-        <input
-          className="w-full rounded border border-gray-300 bg-slate-100 px-3.5 py-1.5"
-          type="text"
-          placeholder="Street*"
-          onChange={onChangeHandler}
-          name="street"
-          value={formData.street}
-          required
+        <Field
+          label="Street"
+          autoComplete="address-line1"
+          {...fieldProps("street")}
         />
-                <input
-          className="w-full rounded border border-gray-300 bg-slate-100 px-3.5 py-1.5"
-          type="text"
-          placeholder="Address*"
-          onChange={onChangeHandler}
-          name="address"
-          value={formData.address}
-          required
+        <Field
+          label="Address"
+          hint="Apartment, building, unit, floor, etc."
+          autoComplete="address-line2"
+          {...fieldProps("address")}
         />
-        <div className="flex gap-3">
-          <input
-            className="w-full rounded border border-gray-300 bg-slate-100 px-3.5 py-1.5"
-            type="text"
-            placeholder="Country*"
-            onChange={onChangeHandler}
-            name="country"
-            value={formData.country}
-            required
+        <div className="grid grid-cols-3 gap-3">
+          <Field
+            label="Country"
+            autoComplete="country-name"
+            {...fieldProps("country")}
           />
-          <input
-            className="w-full rounded border border-gray-300 bg-slate-100 px-3.5 py-1.5"
-            type="text"
-            placeholder="State*"
-            onChange={onChangeHandler}
-            name="state"
-            value={formData.state}
-            required
+          <Field
+            label="State"
+            autoComplete="address-level1"
+            {...fieldProps("state")}
           />
-          <input
-            className="w-full rounded border border-gray-300 bg-slate-100 px-3.5 py-1.5"
-            type="text"
-            placeholder="City*"
-            onChange={onChangeHandler}
-            name="city"
-            value={formData.city}
-            required
+          <Field
+            label="City"
+            autoComplete="address-level2"
+            {...fieldProps("city")}
           />
         </div>
-        <div className="flex gap-3">
-          <input
-            className="w-full rounded border border-gray-300 bg-slate-100 px-3.5 py-1.5"
-            type="number"
-            placeholder="Zip code*"
-            onChange={onChangeHandler}
-            name="zipcode"
-            value={formData.zipcode}
-            required
-          />
-        </div>
-        <input
-          className="w-full rounded border border-gray-300 bg-slate-100 px-3.5 py-1.5"
+        <Field
+          label="Zip code"
           type="text"
-          placeholder="Phone Number*"
-          pattern="((09)|(\+?989))[0-9]{10}"
+          inputMode="numeric"
+          autoComplete="postal-code"
+          {...fieldProps("zipcode")}
+        />
+        <Field
+          label="Phone number"
+          type="tel"
+          inputMode="tel"
+          autoComplete="tel"
+          pattern={PHONE_PATTERN}
           maxLength="13"
-          onChange={onChangeHandler}
-          name="phone"
-          value={formData.phone}
-          required
+          hint="Mobile number, e.g. 09123456789 or +989123456789"
+          errorMessage="Enter a valid mobile number, e.g. 09123456789."
+          title="Mobile number, e.g. 09123456789 or +989123456789"
+          {...fieldProps("phone")}
         />
-        <p className={style.req}>*: Required</p>
-      </div>
+      </fieldset>
       {/*----------------------- Right Side -----------------------*/}
-      <div className="mt-8">
-        <div className="mt-8 min-w-80">
+      <div className="w-full md:mt-8 md:max-w-md">
+        <div className="md:mt-8">
           <CartTotal />
         </div>
-        <div className="mt-12">
-          <Title text1={"PAYMENT"} text2={"METHOD"} />
+        <fieldset className="mt-12">
+          <legend className="text-xl sm:text-2xl">
+            <Title text1={"PAYMENT"} text2={"METHOD"} />
+          </legend>
           {/*----------------------- Payment Method Selection -----------------------*/}
-          <div className="flex flex-col gap-3 lg:flex-row">
-            <div
-              onClick={() => setPaymentMethod("sepah")}
-              className="flex cursor-pointer items-center gap-3 border p-2 px-3"
-            >
-              <p
-                className={`h-3.5 min-w-3.5 rounded-full border transition duration-300 ease-in-out ${paymentMethod === "sepah" ? "bg-green-600" : ""}`}
-              ></p>
-              <img
-                className="mx-4 h-5"
-                src={assets.Sepah_logo}
-                alt="Bank Sepah"
-              />
-            </div>
-            <div
-              onClick={() => setPaymentMethod("tejarat")}
-              className="flex cursor-pointer items-center gap-3 border p-2 px-3"
-            >
-              <p
-                className={`h-3.5 min-w-3.5 rounded-full border transition duration-300 ease-in-out ${paymentMethod === "tejarat" ? "bg-green-600" : ""}`}
-              ></p>
-              <img
-                className="mx-4 h-5"
-                src={assets.Tejarat_Logo}
-                alt="Bank Tejarat"
-              />
-            </div>
-            <div
-              onClick={() => setPaymentMethod("cod")}
-              className="flex cursor-pointer items-center gap-3 border p-2 px-3"
-            >
-              <p
-                className={`h-3.5 min-w-3.5 rounded-full border transition duration-300 ease-in-out ${paymentMethod === "cod" ? "bg-green-600" : ""}`}
-              ></p>
-              <p className="mx-4 text-sm font-medium text-gray-500">
-                CASH ON DELIVERY
-              </p>
-            </div>
+          <div className="flex flex-col gap-3 lg:flex-row lg:flex-wrap">
+            {paymentOptions.map((option) => (
+              <label
+                key={option.value}
+                className={`flex min-h-12 cursor-pointer items-center gap-3 border p-2 px-3 transition duration-200 active:scale-[0.99] has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-black ${
+                  paymentMethod === option.value
+                    ? "border-green-700 bg-green-50"
+                    : "border-gray-300 hover:border-gray-500"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="paymentMethod"
+                  value={option.value}
+                  checked={paymentMethod === option.value}
+                  onChange={() => setPaymentMethod(option.value)}
+                  className="peer sr-only"
+                />
+                <span
+                  aria-hidden="true"
+                  className={`h-4 w-4 min-w-4 rounded-full border-2 transition duration-300 ease-in-out ${
+                    paymentMethod === option.value
+                      ? "border-green-700 bg-green-600"
+                      : "border-gray-500"
+                  }`}
+                ></span>
+                {option.logo ? (
+                  <>
+                    <img className="mx-2 h-6" src={option.logo} alt="" />
+                    <span className="text-sm font-medium text-gray-700">
+                      {option.label}
+                    </span>
+                  </>
+                ) : (
+                  <span className="mx-2 text-sm font-medium uppercase text-gray-700">
+                    {option.label}
+                  </span>
+                )}
+              </label>
+            ))}
           </div>
-          <div className="mt-8 w-full text-center">
-            <button
-              type="submit"
-              onClick={() => {
-                // let navPath = "/orders";
-                let canShowError = false;
-                let inputsNotFilled = [];
-                const inputs = document.querySelectorAll(`input:required`);
-                for (const i in inputs) {
-                  const input = inputs[i];
-                  if (input.value === "") {
-                    const inputThatIsNotFilled = input.placeholder.slice(0, -1);
-                    // navPath = "/place-order";
-                    canShowError = true;
-                    inputsNotFilled.push(inputThatIsNotFilled);
-                  }
-                }
-                if (canShowError) {
-                  let errorMessage = "Fill out the required fills:";
-                  inputsNotFilled.map(
-                    (inputName) => (errorMessage += "\n" + inputName),
-                  );
-                  toast.error(<pre>{errorMessage}</pre>);
-                }
-                // else {
-                //   toast.success("Your order has been submitted.");
-                // }
-                // navigate(navPath);
-              }}
-              className="bg-black px-16 py-3 text-sm text-white"
-            >
-              PLACE ORDER
-            </button>
-          </div>
+        </fieldset>
+        <div className="mt-8 w-full text-center md:text-end">
+          <button
+            type="submit"
+            onClick={reportMissingFields}
+            disabled={isSubmitting}
+            aria-busy={isSubmitting}
+            className="btn-primary w-full px-16 sm:w-auto"
+          >
+            {isSubmitting ? "PLACING ORDER…" : "PLACE ORDER"}
+          </button>
         </div>
       </div>
     </form>

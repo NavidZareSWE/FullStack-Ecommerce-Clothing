@@ -1,9 +1,9 @@
-/* eslint-disable react/prop-types */
 import { createContext, useEffect, useState } from "react";
 import { products } from "../assets/assets";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { TOKEN_STORAGE_KEY } from "../constants/storage";
 
 export const ShopContext = createContext();
 
@@ -15,8 +15,11 @@ const ShopContextProvider = (props) => {
   const [showSearch, setShowSearch] = useState(false);
   const [cartItems, setCartItems] = useState({});
   const [productsDB, setProductsDB] = useState([]);
-  const [token, setToken] = useState("");
-  //Programmatic Redirection: Navigate to different routes based on application state or conditions.
+  // Read the saved login on first render (avoids a "logged out" flash)
+  const [token, setToken] = useState(
+    () => localStorage.getItem(TOKEN_STORAGE_KEY) || "",
+  );
+  const [isLoadingProducts, setIsLoadingProducts] = useState(true);
   const navigate = useNavigate();
 
   const addToCart = async (itemid, size) => {
@@ -94,6 +97,8 @@ const ShopContextProvider = (props) => {
     let totalAmount = 0;
     for (const items in cartItems) {
       let itemInfo = productsDB.find((product) => product._id === items);
+      // Products may still be loading (or the item was removed): skip it
+      if (!itemInfo) continue;
       for (const item in cartItems[items]) {
         try {
           if (cartItems[items][item] > 0) {
@@ -108,14 +113,8 @@ const ShopContextProvider = (props) => {
   };
 
   const sortSizes = (sizes) => {
-    let newSizes = [];
     const sortOrder = ["S", "M", "L", "XL", "XXL"];
-    for (let order in sortOrder) {
-      sizes.includes(sortOrder[order])
-        ? newSizes.push(sortOrder[order])
-        : newSizes;
-    }
-    return newSizes;
+    return sortOrder.filter((size) => sizes.includes(size));
   };
 
   const getProductsData = async () => {
@@ -134,6 +133,8 @@ const ShopContextProvider = (props) => {
     } catch (error) {
       console.error(error);
       toast.error(error.message);
+    } finally {
+      setIsLoadingProducts(false);
     }
   };
   const getUserCart = async (token) => {
@@ -155,14 +156,14 @@ const ShopContextProvider = (props) => {
     getProductsData();
   }, []);
   useEffect(() => {
-    if (!token && localStorage.getItem("token")) {
-      setToken(localStorage.getItem("token"));
-      getUserCart(localStorage.getItem("token"));
-    }
+    // Restore the logged-in user's cart on page load
+    if (token) getUserCart(token);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const value = {
     products: productsDB,
+    isLoadingProducts,
     currency,
     delivery_fee,
     search,
@@ -181,9 +182,6 @@ const ShopContextProvider = (props) => {
     setToken,
   };
   return (
-    //Wrapping: {props.children}
-    // includes any components or elements that are nested inside ShopContextProvider.
-    // These nested components will have access to the context values.
     <ShopContext.Provider value={value}>{props.children}</ShopContext.Provider>
   );
 };

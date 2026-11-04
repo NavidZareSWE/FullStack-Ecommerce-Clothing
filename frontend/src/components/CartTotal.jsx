@@ -5,39 +5,29 @@ import Title from "./Title";
 const CartTotal = () => {
   const { currency, delivery_fee, getCartAmount } = useContext(ShopContext);
   const cartAmount = getCartAmount();
+  const isEmpty = cartAmount === 0 || cartAmount === undefined;
+  const format = (value) => `${currency} ${Number(value || 0).toFixed(2)}`;
+
   return (
-    <div className="w-full">
-      <div className="text-2xl">
-        <Title text1={"CART"} text2={"TOTALS"} />
+    <section className="w-full" aria-labelledby="cart-totals-heading">
+      <div className="text-xl sm:text-2xl">
+        <Title id="cart-totals-heading" text1={"CART"} text2={"TOTALS"} />
       </div>
-      <div className="mt-2 flex flex-col gap-2 text-sm">
-        <div className="flex justify-between">
-          <p>Subtotal</p>
-          <p>
-            {currency} {cartAmount}.00
-          </p>
+      <dl className="mt-2 flex flex-col text-sm [&>div+div]:border-t [&>div+div]:border-gray-200">
+        <div className="flex justify-between py-2">
+          <dt>Subtotal</dt>
+          <dd>{format(cartAmount)}</dd>
         </div>
-        <hr />
-        <div className="flex justify-between">
-          <p>Shipping fee</p>
-          <p>
-            {currency}{" "}
-            {cartAmount === 0 || cartAmount === undefined ? 0 : delivery_fee}.00
-          </p>
+        <div className="flex justify-between py-2">
+          <dt>Shipping fee</dt>
+          <dd>{format(isEmpty ? 0 : delivery_fee)}</dd>
         </div>
-        <hr />
-        <div className="flex justify-between">
-          <b>Total</b>
-          <b>
-            {currency}{" "}
-            {cartAmount === 0 || cartAmount === undefined
-              ? 0
-              : cartAmount + delivery_fee}
-            .00
-          </b>
+        <div className="flex justify-between py-2 text-base font-bold text-gray-900">
+          <dt>Total</dt>
+          <dd>{format(isEmpty ? 0 : cartAmount + delivery_fee)}</dd>
         </div>
-      </div>
-    </div>
+      </dl>
+    </section>
   );
 };
 

@@ -8,15 +8,10 @@ import {
 import upload from "../middleware/multer.js";
 import adminAuth from "../middleware/adminauth.js";
 
-// Create a new Router object to handle routes related to product operations
 const productRouter = express.Router();
 
 /* [ℹ️] Some APIs use POST for all write operations(insert, update, delete),
  including deletions, to maintain consistency in their API design.*/
-//Define the route for adding a new product. This route uses the 'upload' middleware to handle file uploads.
-// Define the route for removing an existing product, which triggers the removeProduct function
-// Define the route for retrieving a single product, which triggers the getSingleProduct function
-// Define the route for listing all products, which triggers the listProducts function
 productRouter.post(
   "/add",
   adminAuth,
