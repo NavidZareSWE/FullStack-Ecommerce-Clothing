@@ -1,11 +1,51 @@
-# Project-level pnpm settings (this folder is a single package, not a monorepo).
+# =============================================================================
+# pnpm settings for the frontend
+# =============================================================================
+# This folder is a single app, not a monorepo with several packages.
+#
+# Why this file looks the way it does:
+# Vercel installed this project with pnpm 9, and pnpm 9 reads this file
+# differently from pnpm 10. The settings below are written so that
+# "pnpm install" works on both versions.
+# =============================================================================
 
-# ESLint 10 still depends on minimatch 10.x, which is affected by
-# GHSA-g3hv-75wg-m249 (fixed in 11.0.1). minimatch 11 is API-compatible for
-# ESLint's usage; lint output was verified to be identical.
-overrides:
-  minimatch: ^11.0.1
 
-# Only install package versions that have been public for at least 1 day
-# (supply-chain protection; matches the default policy of newer pnpm releases).
+# -----------------------------------------------------------------------------
+# packages
+# -----------------------------------------------------------------------------
+# Lists the folders that pnpm should treat as packages.
+# "." means "only this folder" (the frontend app itself).
+#
+# pnpm 9 needs this field. Without it, the install stops with:
+#   ERROR  packages field missing or empty
+# This is what caused the Vercel error:
+#   Command "pnpm install" exited with 1
+packages:
+  - "."
+
+
+# -----------------------------------------------------------------------------
+# minimumReleaseAge
+# -----------------------------------------------------------------------------
+# Only install package versions that have been public for at least
+# 1440 minutes (1 day). This is supply-chain protection: if a package is
+# hijacked and a malicious version is published, it is usually found and
+# removed within hours, before this project would install it.
+#
+# Newer pnpm 10 versions apply this setting. pnpm 9 does not support it,
+# so it only protects installs that run on pnpm 10.
 minimumReleaseAge: 1440
+
+
+# -----------------------------------------------------------------------------
+# NOTE: the minimatch security override is NOT in this file
+# -----------------------------------------------------------------------------
+# ESLint 10 still depends on minimatch 10.x, which is affected by
+# GHSA-g3hv-75wg-m249 (fixed in 11.0.1). minimatch 11 is API-compatible
+# for ESLint's usage, and lint output was verified to be identical.
+#
+# The override that forces minimatch ^11.0.1 lives in package.json under
+# "pnpm" > "overrides". It must not be in this file, because pnpm 9 ignores
+# "overrides" here. The installed setup would then no longer match
+# pnpm-lock.yaml, and the install would fail with:
+#   ERR_PNPM_LOCKFILE_CONFIG_MISMATCH
